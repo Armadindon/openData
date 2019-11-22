@@ -1,0 +1,121 @@
+body{
+    background-image: url("../img/three-persons-sitting-on-the-stairs-talking-with-each-other-1438072.png");
+    font-family: 'Fredoka One', cursive;
+}
+
+.container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform:translate(-50%, -50%);
+}
+
+.buttons{
+    margin: 0 auto;
+    padding: 2em;
+    display: inline-block;
+    width: 61em;
+}
+/* Reset Select */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -ms-appearance: none;
+    appearance: none;
+    outline: 0;
+    box-shadow: none;
+    border: 0 !important;
+    background: #2c3e50;
+}
+.container h1{
+    margin: auto;
+    text-align: center;
+    color: #fa983a;
+}
+
+
+
+/* Remove IE arrow */
+select::-ms-expand {
+    display: none;
+}
+/* Custom Select */
+.select {
+    position: relative;
+    display: inline-flex;
+    width: 20em;
+    height: 3em;
+    line-height: 3;
+    background: #2c3e50;
+    overflow: hidden;
+    border-radius: .25em;
+}
+select {
+    flex: 1;
+    padding: 0 .5em;
+    color: #fff;
+    cursor: pointer;
+}
+/* Arrow */
+.select::after {
+    content: '\25BC';
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0 1em;
+    background: #34495e;
+    cursor: pointer;
+    pointer-events: none;
+    -webkit-transition: .25s all ease;
+    -o-transition: .25s all ease;
+    transition: .25s all ease;
+}
+/* Transition */
+.select:hover::after {
+    color: #f39c12;
+}
+
+/*Button*/
+body {
+    margin:0;
+    background-color:#191919;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:Helvetica,Sans-serif;
+}
+a {
+    text-decoration:none;
+    color:#FFF;
+}
+.rainbow-button {
+    width:calc(20vw + 6px);
+    height:calc(8vw + 6px);
+    background-image: linear-gradient(90deg, #00C0FF 0%, #FFCF00 49%, #FC4F4F 80%, #00C0FF 100%);
+    border-radius:5px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-transform:uppercase;
+    font-size:3vw;
+    font-weight:bold;
+}
+.rainbow-button:after {
+    content:attr(alt);
+    width:20vw;
+    height:8vw;
+    background-color:#191919;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+.rainbow-button:hover {
+    animation:slidebg 2s linear infinite;
+}
+
+@keyframes slidebg {
+    to {
+        background-position:20vw;
+    }
+}
