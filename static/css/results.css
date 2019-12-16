@@ -1,0 +1,52 @@
+
+#map{
+    width: 60%;
+    height: 100%;
+    float: right;
+    margin-left: 10px;
+}
+
+.table{
+    width: 35%;
+    float: left;
+    height: 500px;
+}
+
+.results{
+    margin: 2% 5%;
+    display: inline-block;
+    height: 500px;
+}
+
+table{
+    width:100%;
+    table-layout: fixed;
+}
+
+.tbl-header{
+    background-color: rgba(255,255,255,0.3);
+    height: 70px;
+}
+.tbl-content{
+    height:430px;
+    overflow-x:auto;
+    margin-top: 0;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+th{
+    padding: 20px 15px;
+    text-align: left;
+    font-weight: 800;
+    font-size: 12px;
+    color: white;
+    text-transform: uppercase;
+}
+td{
+    padding: 15px;
+    text-align: left;
+    vertical-align:middle;
+    font-weight: 600;
+    font-size: 12px;
+    color: white;
+    border-bottom: solid 1px rgba(255,255,255,0.1);
+}
