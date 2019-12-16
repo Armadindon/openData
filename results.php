@@ -1,3 +1,14 @@
+<?php
+//on récupère les écoles en fonctions des paramètres rentrés
+if (!(isset($_POST["type"]) && isset($_POST["dep"]))){
+    header('Location: index.php'); // on redirect si les paramètres ne sont pas remplis
+}
+
+$json = file_get_contents("https://data.enseignementsup-recherche.gouv.fr/api/records/1.0/search/?dataset=fr-esr-principaux-diplomes-et-formations-prepares-etablissements-publics&rows=10000&sort=-rentree_lib&refine.rentree_lib=2017-18&refine.dep_ins_lib=".$_POST["dep"]."&refine.sect_disciplinaire_lib=".$_POST["type"]);
+$infos = json_decode($json,true);
+
+?>
+
 <!doctype html>
 <html lang="fr">
 <head>
@@ -35,67 +46,22 @@
             <div class="tbl-content">
                 <table cellpadding="0" cellspacing="0" border="0">
                     <tbody>
-                    <tr>
-                        <td>EFREI</td>
-                        <td>Villejuif</td>
-                        <td>Informatique</td>
-                        <td>Diplôme d'ingénieur</td>
+                    <?php
+                    foreach($infos["records"] as $record){
+                        printf("<tr>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
                         <td>5 ans</td>
-                    </tr>
-                    <tr>
-                        <td>UPEM</td>
-                        <td>Marne la Vallée</td>
-                        <td>Informatique</td>
-                        <td>DUT</td>
-                        <td>2 ans</td>
-                    </tr>
-                    <tr>
-                        <td>UPEM</td>
-                        <td>Marne la Vallée</td>
-                        <td>Multimédia</td>
-                        <td>DUT</td>
-                        <td>2 ans</td>
-                    </tr>
-
-                    <tr>
-                        <td>UPEM</td>
-                        <td>Marne la Vallée</td>
-                        <td>Multimédia</td>
-                        <td>License</td>
-                        <td>2 ans</td>
-                    </tr>
-
-                    <tr>
-                        <td>UPEM</td>
-                        <td>Marne la Vallée</td>
-                        <td>Multimédia</td>
-                        <td>License</td>
-                        <td>2 ans</td>
-                    </tr>
-
-                    <tr>
-                        <td>UPEM</td>
-                        <td>Marne la Vallée</td>
-                        <td>Multimédia</td>
-                        <td>License</td>
-                        <td>2 ans</td>
-                    </tr>
-
-                    <tr>
-                        <td>UPEM</td>
-                        <td>Marne la Vallée</td>
-                        <td>Multimédia</td>
-                        <td>License</td>
-                        <td>2 ans</td>
-                    </tr>
-
-                    <tr>
-                        <td>UPEM</td>
-                        <td>Marne la Vallée</td>
-                        <td>Multimédia</td>
-                        <td>License</td>
-                        <td>2 ans</td>
-                    </tr>
+                    </tr>",
+                            $record["fields"]["etablissement_lib"],
+                            $record["fields"]["com_ins_lib"],
+                            $record["fields"]["sect_disciplinaire_lib"],
+                            $record["fields"]["diplome_rgp"]
+                        );
+                    }
+                    ?>
 
                     </tbody>
                 </table>
@@ -112,7 +78,7 @@
 <script src="static/js/leaflet.js"></script>
 <script type="text/javascript">
     var map = L.map("map",{}).setView([51.505, -0.09], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         attribution: '<a href="https://www.lije-creative.com">LIJE Creative</a>',
         maxZoom: 18
     }).addTo(map);

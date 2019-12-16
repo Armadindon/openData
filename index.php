@@ -2,6 +2,8 @@
 
 $json = file_get_contents("https://data.enseignementsup-recherche.gouv.fr/api/records/1.0/search/?dataset=fr-esr-principaux-diplomes-et-formations-prepares-etablissements-publics&sort=-rentree_lib&facet=dep_ins_lib&facet=sect_disciplinaire_lib&refine.rentree_lib=2017-18");
 $infos = json_decode($json,true);
+
+
 ?>
 
 <!doctype html>
@@ -25,31 +27,31 @@ $infos = json_decode($json,true);
                 <div class="select">
                     <select name="year"> <!-- src : https://codepen.io/raubaca/pen/VejpQP -->
                         <option selected disabled>Niveau D'étude</option>
-                        <option value="0">0</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="2">3</option>
-                        <option value="2">4</option>
-                        <option value="2">5</option>
+                        <?php
+                        for($i = 0;$i<6;$i++){
+                            printf("<option value=\"%d\">%d</option>",$i,$i);
+                        }
+                        ?>
                     </select>
                 </div>
                 <div class="select">
                     <select name="type"> <!-- src : https://codepen.io/raubaca/pen/VejpQP -->
                         <option selected disabled>Type</option>
-                        <option value="0">Informatique</option>
-                        <option value="1">Multimédia</option>
-                        <option value="2">Santé</option>
-                        <option value="2">Droit</option>
-                        <option value="2">Biologie</option>
-                        <option value="2">Mathématiques</option>
+                        <?php
+                        foreach ($infos["facet_groups"][1]["facets"] as $spec){
+                            printf("<option value=\"%s\">%s</option>",$spec["name"],$spec["name"]);
+                        }
+                        ?>
                     </select>
                 </div>
                 <div class="select">
                     <select name="dep"> <!-- src : https://codepen.io/raubaca/pen/VejpQP -->
                         <option selected disabled>Département</option>
-                        <option value="77">Seine et Marne</option>
-                        <option value="75">Paris</option>
-                        <option value="78">Val D'Oise</option>
+                        <?php
+                        foreach ($infos["facet_groups"][0]["facets"] as $dep){
+                            printf("<option value=\"%s\">%s</option>",$dep["name"],$dep["name"]);
+                        }
+                        ?>
                     </select>
                 </div>
             </div>
