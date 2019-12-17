@@ -25,17 +25,17 @@ $infos = json_decode($json,true);
         <form action="results.php" method="post">
             <div class="buttons">
                 <div class="select">
-                    <select name="year"> <!-- src : https://codepen.io/raubaca/pen/VejpQP -->
+                    <select name="year" required> <!-- src : https://codepen.io/raubaca/pen/VejpQP -->
                         <option selected disabled>Niveau D'étude</option>
                         <?php
                         for($i = 0;$i<6;$i++){
-                            printf("<option value=\"%d\">%d</option>",$i,$i);
+                            printf("<option value=\"%d\">Bac+ %d</option>",$i+1,$i);
                         }
                         ?>
                     </select>
                 </div>
-                <div class="select">
-                    <select name="type"> <!-- src : https://codepen.io/raubaca/pen/VejpQP -->
+                <div class="select" >
+                    <select name="type" required> <!-- src : https://codepen.io/raubaca/pen/VejpQP -->
                         <option selected disabled>Type</option>
                         <?php
                         foreach ($infos["facet_groups"][1]["facets"] as $spec){
@@ -45,7 +45,7 @@ $infos = json_decode($json,true);
                     </select>
                 </div>
                 <div class="select">
-                    <select name="dep"> <!-- src : https://codepen.io/raubaca/pen/VejpQP -->
+                    <select name="dep" required> <!-- src : https://codepen.io/raubaca/pen/VejpQP -->
                         <option selected disabled>Département</option>
                         <?php
                         foreach ($infos["facet_groups"][0]["facets"] as $dep){
