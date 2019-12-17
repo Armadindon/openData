@@ -27,32 +27,35 @@ $idEtablissements = array();
 
 
 <div class="container">
-    <h1>Voici les résultats !</h1>
-    <div class="results">
-        <div class="table">
-            <div class="tbl-header">
-                <table cellpadding="0" cellspacing="0" border="0">
-                    <thead>
-                    <tr>
-                        <th>Ecole</th>
-                        <th>Ville</th>
-                        <th>Specialite</th>
-                        <th>Type de Diplôme</th>
-                        <th>Intitulé de la Formation</th>
-                        <th>Plus D'Informations</th>
-                    </tr>
-                    </thead>
-                </table>
-            </div>
-            <div class="tbl-content">
-                <table cellpadding="0" cellspacing="0" border="0">
-                    <tbody>
-                    <?php
-                    foreach($infos["records"] as $record){
-                        if(!in_array($record["fields"]["etablissement"],$idEtablissements)){
-                            array_push($idEtablissements,$record["fields"]["etablissement"]);
-                        }
-                        printf("<tr>
+    <?php
+    if (count($infos["records"])>0) {
+        ?>
+        <h1>Voici les résultats !</h1>
+        <div class="results">
+            <div class="table">
+                <div class="tbl-header">
+                    <table cellpadding="0" cellspacing="0" border="0">
+                        <thead>
+                        <tr>
+                            <th>Ecole</th>
+                            <th>Ville</th>
+                            <th>Specialite</th>
+                            <th>Type de Diplôme</th>
+                            <th>Intitulé de la Formation</th>
+                            <th>Plus D'Informations</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div class="tbl-content">
+                    <table cellpadding="0" cellspacing="0" border="0">
+                        <tbody>
+                        <?php
+                        foreach ($infos["records"] as $record) {
+                            if (!in_array($record["fields"]["etablissement"], $idEtablissements)) {
+                                array_push($idEtablissements, $record["fields"]["etablissement"]);
+                            }
+                            printf("<tr>
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
@@ -60,37 +63,46 @@ $idEtablissements = array();
                         <td>%s</td>
                         <td><a id='loc_%s'>Lien</a></td>
                     </tr>",
-                            $record["fields"]["etablissement_lib"],
-                            $record["fields"]["com_ins_lib"],
-                            $record["fields"]["sect_disciplinaire_lib"],
-                            $record["fields"]["diplome_lib"],
-                            $record["fields"]["libelle_intitule_1"],
-                            $record["fields"]["etablissement"]
-                        );
-                    }
-                    ?>
+                                $record["fields"]["etablissement_lib"],
+                                $record["fields"]["com_ins_lib"],
+                                $record["fields"]["sect_disciplinaire_lib"],
+                                $record["fields"]["diplome_lib"],
+                                $record["fields"]["libelle_intitule_1"],
+                                $record["fields"]["etablissement"]
+                            );
+                        }
+                        ?>
 
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="map">
             </div>
         </div>
-        <div id="map">
-        </div>
-    </div>
 
-    <h2>Une autre formation ?</h2>
-    <h2><a href="index.php">Retourner a l'acceuil</a></h2>
-
+        <h2>Une autre formation ?</h2>
+        <h2><a href="index.php">Retourner a l'acceuil</a></h2>
+        <?php
+    }else{
+        ?>
+        <h1> Aucun Résultat trouvé !</h1>
+        <h2><a href="index.php">Retourner a l'acceuil</a></h2>
+    <?php
+    }
+    ?>
 </div>
 <script src="static/js/leaflet.js"></script>
 <script type="text/javascript">
 
     var map = L.map("map",{});
-    var dict = {};
+    var dict = new Map();
+
 
     L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         maxZoom: 18
     }).addTo(map);
+
 
     <?php
     //on ajoute les marqueurs sur la carte
@@ -98,16 +110,18 @@ $idEtablissements = array();
             $lat = 0.0;
             $long = 0.0;
             foreach ($idEtablissements as $id){
-                $etablissement = json_decode(file_get_contents("https://data.enseignementsup-recherche.gouv.fr/api/records/1.0/search/?dataset=fr-esr-principaux-etablissements-enseignement-superieur&sort=uo_lib&facet=uai&refine.uai=".$id."&fields=coordonnees,uo_lib,url"),true);
+                $etablissement = json_decode(file_get_contents("https://data.enseignementsup-recherche.gouv.fr/api/records/1.0/search/?dataset=fr-esr-principaux-etablissements-enseignement-superieur&sort=uo_lib&facet=uai&refine.uai=".$id."&fields=coordonnees,uo_lib,url,adresse_uai,com_nom,code_postal_uai,numero_telephone_uai"),true);
                 $lat = $etablissement["records"][0]["fields"]["coordonnees"][0];
                 $long = $etablissement["records"][0]["fields"]["coordonnees"][1];
                 printf("
-                L.marker([%f, %f]).addTo(map).bindPopup(\"<a href='%s'>%s</a>\");
-                ",$lat,$long,$etablissement["records"][0]["fields"]["url"],$etablissement["records"][0]["fields"]["uo_lib"]);
+                dict.set('%s',L.marker([%f, %f]).addTo(map).bindPopup(\"<b>%s</b><br/><a href='%s'>Site web</a><br/><b>Adresse :</b> %s (%s) - %s%s\"));
+                ",$id,$lat,$long,$etablissement["records"][0]["fields"]["uo_lib"],$etablissement["records"][0]["fields"]["url"],$etablissement["records"][0]["fields"]["com_nom"],$etablissement["records"][0]["fields"]["code_postal_uai"],$etablissement["records"][0]["fields"]["adresse_uai"],(isset($etablissement["records"][0]["fields"]["numero_telephone_uai"])? "<br/><b>Téléphone :</b> ".$etablissement["records"][0]["fields"]["numero_telephone_uai"]:""));
 
                 printf("document.getElementById('loc_%s').addEventListener('click',event=>{
+                    map.closePopup();
                     map.setView([%f,%f],20);
-                });",$id,$lat,$long);
+                    dict.get('%s').openPopup();;
+                });",$id,$lat,$long,$id);
             }
 
     ?>
