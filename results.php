@@ -37,11 +37,11 @@ $idEtablissements = array();
                     <table cellpadding="0" cellspacing="0" border="0">
                         <thead>
                         <tr>
-                            <th>Ecole</th>
-                            <th>Ville</th>
-                            <th>Specialite</th>
-                            <th>Type de Diplôme</th>
-                            <th>Intitulé de la Formation</th>
+                            <th>Ecole<img src="static/img/up-arrow.png" class="order" id="0"/></th>
+                            <th>Ville<img src="static/img/up-arrow.png" class="order" id="1"/></th>
+                            <th>Specialite<img src="static/img/up-arrow.png" class="order" id="2"/></th>
+                            <th>Type de Diplôme<img src="static/img/up-arrow.png" class="order" id="3"/></th>
+                            <th>Intitulé de la Formation <img src="static/img/up-arrow.png" class="order" id="4"/></th>
                             <th>Plus D'Informations</th>
                         </tr>
                         </thead>
@@ -49,29 +49,8 @@ $idEtablissements = array();
                 </div>
                 <div class="tbl-content">
                     <table cellpadding="0" cellspacing="0" border="0">
-                        <tbody>
-                        <?php
-                        foreach ($infos["records"] as $record) {
-                            if (!in_array($record["fields"]["etablissement"], $idEtablissements)) {
-                                array_push($idEtablissements, $record["fields"]["etablissement"]);
-                            }
-                            printf("<tr>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td><a id='loc_%s'>Lien</a></td>
-                    </tr>",
-                                $record["fields"]["etablissement_lib"],
-                                $record["fields"]["com_ins_lib"],
-                                $record["fields"]["sect_disciplinaire_lib"],
-                                $record["fields"]["diplome_lib"],
-                                $record["fields"]["libelle_intitule_1"],
-                                $record["fields"]["etablissement"]
-                            );
-                        }
-                        ?>
+                        <tbody id="body-table"> <!-- est rempli par du JavaScript et non par le PHP (Permet de faire des actions de tri sans avoir a raffraichir la page -->
+
 
                         </tbody>
                     </table>
@@ -95,6 +74,38 @@ $idEtablissements = array();
 <script src="static/js/leaflet.js"></script>
 <script type="text/javascript">
 
+    function printResults(array){
+        document.getElementById("body-table").innerHTML = "";
+        array.forEach(etab =>{
+        document.getElementById("body-table").innerHTML += "" +
+            "<tr> <td>"+etab[0]+"</td> <td>"+etab[1]+"</td> <td>"+etab[2]+"</td> <td>"+etab[3]+"</td> <td>"+etab[4]+"</td> <td><a id='loc_"+etab[5]+"'>Lien</a></td> </tr>"
+        });
+    }
+
+
+
+    var dataResults = [];
+
+    <?php
+            //on transmet les données au javascript comme ca le Javascript pourra faire ses actions sans a voir a raffraichir la page
+    foreach ($infos["records"] as $record) {
+        if (!in_array($record["fields"]["etablissement"], $idEtablissements)) {
+            array_push($idEtablissements, $record["fields"]["etablissement"]);
+        }
+        printf("dataResults.push([\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"]);\n",
+            $record["fields"]["etablissement_lib"],
+            $record["fields"]["com_ins_lib"],
+            $record["fields"]["sect_disciplinaire_lib"],
+            $record["fields"]["diplome_lib"],
+            $record["fields"]["libelle_intitule_1"],
+            $record["fields"]["etablissement"]
+        );
+    }
+    ?>
+
+    printResults(dataResults);
+
+
     var map = L.map("map",{});
     var dict = new Map();
 
@@ -103,8 +114,9 @@ $idEtablissements = array();
         maxZoom: 18
     }).addTo(map);
 
+    function bindLink(map){
+        <?php
 
-    <?php
     //on ajoute les marqueurs sur la carte
             //On récupère les coordonées du dernier point placé pour le mettre au centre au cas ou si l'utilisateur ne souhaite pas donner sa géolocalisation
             $lat = 0.0;
@@ -124,7 +136,12 @@ $idEtablissements = array();
                 });",$id,$lat,$long,$id);
             }
 
-    ?>
+
+        ?>
+    }
+
+    bindLink(map);
+
 
     map.setView([<?php printf("%f, %f",$lat,$long);?>],10)
 
@@ -132,6 +149,28 @@ $idEtablissements = array();
         console.log("Ok");
         navigator.geolocation.getCurrentPosition(position => {
             map.setView([position.coords.latitude,position.coords.longitude],10);
+        });
+    }
+
+        var cursors = document.getElementsByClassName("order");
+
+    for (let i = 0;i<cursors.length;i++){
+        cursors.item(i).addEventListener('click',event=>{
+            //on reset les rotations
+            for (let j = 0; j<cursors.length; j++){
+                if(event.target.id !== cursors.item(j).id){
+                    cursors.item(j).style.transform = "rotate(0deg)";
+                }else{
+                    cursors.item(j).style.transform = "rotate(180deg)";
+                }
+            }
+
+            //on met en place le sort
+            dataResults.sort((a,b)=>a[event.target.id].localeCompare(b[event.target.id]));
+            //on réaffiche la liste
+            printResults(dataResults);
+            //on remet bien les marqueurs
+            bindLink(map);
         });
     }
 

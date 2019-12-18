@@ -3,7 +3,6 @@
     width: 35%;
     height: 100%;
     float: right;
-    margin-left: 10px;
 }
 
 .table{
@@ -54,4 +53,14 @@ td{
 a:hover{
     text-decoration: underline;
     cursor: pointer;
+}
+
+.order{
+    height: 15px;
+    width: 15px;
+    margin-left: 15px;
+    float: right;
+    filter: invert(100%);
+    position: absolute;
+    transition-duration: 0.5s;
 }
