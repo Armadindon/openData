@@ -27,7 +27,7 @@ table{
     height: 70px;
 }
 .tbl-content{
-    height:430px;
+    height:380px;
     overflow-x:auto;
     margin-top: 0;
     border: 1px solid rgba(255,255,255,0.3);
@@ -63,4 +63,34 @@ a:hover{
     filter: invert(100%);
     position: absolute;
     transition-duration: 0.5s;
+}
+
+.searchBar{
+    display: inline-block;
+    width: 98.5%;
+    height: 30px;
+    margin-top: 20px;
+}
+
+#searchImage{
+    background-color: rgba(200,200,200,0.4);
+    position: absolute;
+    padding: 1px;
+    height: 28px;
+    width: 2%;
+    filter: invert(100%);
+}
+
+#searchImage:hover{
+    cursor: pointer;
+}
+
+#searchInput{
+    width: 97.5%;
+    color: white;
+    height: 100%;
+    border: none;
+    font-family: 'Fredoka One', cursive;
+    background-color: rgba(255,255,255,0.3);
+    padding: 0;
 }

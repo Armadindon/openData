@@ -55,6 +55,8 @@ $idEtablissements = array();
                         </tbody>
                     </table>
                 </div>
+                <div class="searchBar"><input type="search" id="searchInput" placeholder="Rechercher ..."><img src="static/img/search.png" id="searchImage"></div>
+
             </div>
             <div id="map">
             </div>
@@ -80,6 +82,19 @@ $idEtablissements = array();
         document.getElementById("body-table").innerHTML += "" +
             "<tr> <td>"+etab[0]+"</td> <td>"+etab[1]+"</td> <td>"+etab[2]+"</td> <td>"+etab[3]+"</td> <td>"+etab[4]+"</td> <td><a class='loc_"+etab[5]+"'>Lien</a></td> </tr>"
         });
+    }
+
+    function searchKeyWord(list,keyWord) {
+        let results = [];
+        for(let array of list){
+            for(let value of array.slice(0,array.length-1)){
+                if(value.toUpperCase().includes(keyWord.toUpperCase())){
+                    results.push(array);
+                    break;
+                }
+            }
+        }
+        return results;
     }
 
 
@@ -179,6 +194,19 @@ $idEtablissements = array();
             bindLink(map,dict);
         });
     }
+
+    //pour la barre de recherche
+    document.getElementById("searchImage").addEventListener("click",event=>{
+        printResults(searchKeyWord(dataResults,document.getElementById("searchInput").value));
+    });
+
+    document.getElementById("searchInput").addEventListener("keyup",event=>{
+        if(event.key === "Enter"){
+            printResults(searchKeyWord(dataResults,document.getElementById("searchInput").value));
+        }
+    });
+
+
 
 
 
