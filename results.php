@@ -78,7 +78,7 @@ $idEtablissements = array();
         document.getElementById("body-table").innerHTML = "";
         array.forEach(etab =>{
         document.getElementById("body-table").innerHTML += "" +
-            "<tr> <td>"+etab[0]+"</td> <td>"+etab[1]+"</td> <td>"+etab[2]+"</td> <td>"+etab[3]+"</td> <td>"+etab[4]+"</td> <td><a id='loc_"+etab[5]+"'>Lien</a></td> </tr>"
+            "<tr> <td>"+etab[0]+"</td> <td>"+etab[1]+"</td> <td>"+etab[2]+"</td> <td>"+etab[3]+"</td> <td>"+etab[4]+"</td> <td><a class='loc_"+etab[5]+"'>Lien</a></td> </tr>"
         });
     }
 
@@ -114,9 +114,11 @@ $idEtablissements = array();
         maxZoom: 18
     }).addTo(map);
 
-    function bindLink(map){
-        <?php
 
+
+    function bindLink(map,dict){
+        <?php
+            echo ("let links;");
     //on ajoute les marqueurs sur la carte
             //On récupère les coordonées du dernier point placé pour le mettre au centre au cas ou si l'utilisateur ne souhaite pas donner sa géolocalisation
             $lat = 0.0;
@@ -129,18 +131,22 @@ $idEtablissements = array();
                 dict.set('%s',L.marker([%f, %f]).addTo(map).bindPopup(\"<b>%s</b><br/><a href='%s'>Site web</a><br/><b>Adresse :</b> %s (%s) - %s%s\"));
                 ",$id,$lat,$long,$etablissement["records"][0]["fields"]["uo_lib"],$etablissement["records"][0]["fields"]["url"],$etablissement["records"][0]["fields"]["com_nom"],$etablissement["records"][0]["fields"]["code_postal_uai"],$etablissement["records"][0]["fields"]["adresse_uai"],(isset($etablissement["records"][0]["fields"]["numero_telephone_uai"])? "<br/><b>Téléphone :</b> ".$etablissement["records"][0]["fields"]["numero_telephone_uai"]:""));
 
-                printf("document.getElementById('loc_%s').addEventListener('click',event=>{
-                    map.closePopup();
-                    map.setView([%f,%f],20);
-                    dict.get('%s').openPopup();;
-                });",$id,$lat,$long,$id);
+                printf("
+                    links = document.getElementsByClassName('loc_%s');
+                    for (let i = 0;i<links.length;i++){
+                    links.item(i).addEventListener('click',event=>{
+                            map.closePopup();
+                            map.setView([%f,%f],20);
+                            dict.get('%s').openPopup();
+                        });
+                    }",$id,$lat,$long,$id);
             }
 
 
         ?>
     }
 
-    bindLink(map);
+    bindLink(map,dict);
 
 
     map.setView([<?php printf("%f, %f",$lat,$long);?>],10)
@@ -170,7 +176,7 @@ $idEtablissements = array();
             //on réaffiche la liste
             printResults(dataResults);
             //on remet bien les marqueurs
-            bindLink(map);
+            bindLink(map,dict);
         });
     }
 
