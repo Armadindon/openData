@@ -134,7 +134,7 @@ $idEtablissements = array();
     function bindLink(map,dict){
         <?php
             echo ("let links;");
-    //on ajoute les marqueurs sur la carte
+            //on ajoute les marqueurs sur la carte
             //On récupère les coordonées du dernier point placé pour le mettre au centre au cas ou si l'utilisateur ne souhaite pas donner sa géolocalisation
             $lat = 0.0;
             $long = 0.0;
@@ -149,11 +149,11 @@ $idEtablissements = array();
                 printf("
                     links = document.getElementsByClassName('loc_%s');
                     for (let i = 0;i<links.length;i++){
-                    links.item(i).addEventListener('click',event=>{
-                            map.closePopup();
-                            map.setView([%f,%f],20);
-                            dict.get('%s').openPopup();
-                        });
+                        links.item(i).addEventListener('click',event=>{
+                                map.closePopup();
+                                map.setView([%f,%f],20);
+                                dict.get('%s').openPopup();
+                            });
                     }",$id,$lat,$long,$id);
             }
 
@@ -194,6 +194,8 @@ $idEtablissements = array();
             bindLink(map,dict);
         });
     }
+
+    //TODO : Gérer la connexion Recherche / Order
 
     //pour la barre de recherche
     document.getElementById("searchImage").addEventListener("click",event=>{
