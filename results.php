@@ -37,11 +37,12 @@ $idEtablissements = array();
                     <table cellpadding="0" cellspacing="0" border="0">
                         <thead>
                         <tr>
-                            <th>Ecole<img src="static/img/up-arrow.png" class="order" id="0"/></th>
-                            <th>Ville<img src="static/img/up-arrow.png" class="order" id="1"/></th>
-                            <th>Specialite<img src="static/img/up-arrow.png" class="order" id="2"/></th>
-                            <th>Type de Diplôme<img src="static/img/up-arrow.png" class="order" id="3"/></th>
-                            <th>Intitulé de la Formation <img src="static/img/up-arrow.png" class="order" id="4"/></th>
+                            <th>Ecole<img alt="Flèche de changement d'ordre" src="static/img/up-arrow.png" class="order" id="0"/></th>
+                            <th>Ville<img alt="Flèche de changement d'ordre" src="static/img/up-arrow.png" class="order" id="1"/></th>
+                            <th>Specialite<img alt="Flèche de changement d'ordre" src="static/img/up-arrow.png" class="order" id="2"/></th>
+                            <th>Type de Diplôme<img alt="Flèche de changement d'ordre" src="static/img/up-arrow.png" class="order" id="3"/></th>
+                            <th>Intitulé de la Formation <img alt="Flèche de changement d'ordre" src="static/img/up-arrow.png" class="order" id="4"/></th>
+                            <th>Nombre de visites </th>
                             <th>Plus D'Informations</th>
                         </tr>
                         </thead>
@@ -79,9 +80,16 @@ $idEtablissements = array();
     function printResults(array){
         document.getElementById("body-table").innerHTML = "";
         array.forEach(etab =>{
-        document.getElementById("body-table").innerHTML += "" +
-            "<tr> <td>"+etab[0]+"</td> <td>"+etab[1]+"</td> <td>"+etab[2]+"</td> <td>"+etab[3]+"</td> <td>"+etab[4]+"</td> <td><a class='loc_"+etab[5]+"'>Lien</a></td> </tr>"
-        });
+            var rq = new XMLHttpRequest();
+            rq.open('GET',"api.php?type=nbVisits&school="+etab[5]);
+            rq.responseType = 'json';
+            rq.send();
+            rq.onload = function() {
+                let response = rq.response;
+                document.getElementById("body-table").innerHTML += "" +
+                    "<tr> <td>"+etab[0]+"</td> <td>"+etab[1]+"</td> <td>"+etab[2]+"</td> <td>"+etab[3]+"</td> <td>"+etab[4]+"</td> <td>"+response["results"][0]+"</td> <td><a class='loc_"+etab[5]+"'>Lien</a></td> </tr>"
+                }
+            });
     }
 
     function searchKeyWord(list,keyWord) {
@@ -133,41 +141,52 @@ $idEtablissements = array();
 
     function bindLink(map,dict){
         <?php
-            echo ("let links;");
+            echo ("let links;\n");
             //on ajoute les marqueurs sur la carte
             //On récupère les coordonées du dernier point placé pour le mettre au centre au cas ou si l'utilisateur ne souhaite pas donner sa géolocalisation
             $lat = 0.0;
             $long = 0.0;
             foreach ($idEtablissements as $id){
                 $etablissement = json_decode(file_get_contents("https://data.enseignementsup-recherche.gouv.fr/api/records/1.0/search/?dataset=fr-esr-principaux-etablissements-enseignement-superieur&sort=uo_lib&facet=uai&refine.uai=".$id."&fields=coordonnees,uo_lib,url,adresse_uai,com_nom,code_postal_uai,numero_telephone_uai"),true);
-                $lat = $etablissement["records"][0]["fields"]["coordonnees"][0];
-                $long = $etablissement["records"][0]["fields"]["coordonnees"][1];
-                printf("
-                dict.set('%s',L.marker([%f, %f]).addTo(map).bindPopup(\"<b>%s</b><br/><a href='%s'>Site web</a><br/><b>Adresse :</b> %s (%s) - %s%s\"));
-                ",$id,$lat,$long,$etablissement["records"][0]["fields"]["uo_lib"],$etablissement["records"][0]["fields"]["url"],$etablissement["records"][0]["fields"]["com_nom"],$etablissement["records"][0]["fields"]["code_postal_uai"],$etablissement["records"][0]["fields"]["adresse_uai"],(isset($etablissement["records"][0]["fields"]["numero_telephone_uai"])? "<br/><b>Téléphone :</b> ".$etablissement["records"][0]["fields"]["numero_telephone_uai"]:""));
+                if($etablissement["nhits"] != 0){
+                    $lat = $etablissement["records"][0]["fields"]["coordonnees"][0];
+                    $long = $etablissement["records"][0]["fields"]["coordonnees"][1];
+                    printf("
+                    dict.set('%s',L.marker([%f, %f]).addTo(map).bindPopup(\"<b>%s</b><br/><a href='%s'>Site web</a><br/><b>Adresse :</b> %s (%s) - %s%s\"));
+                    ",$id,$lat,$long,$etablissement["records"][0]["fields"]["uo_lib"],$etablissement["records"][0]["fields"]["url"],$etablissement["records"][0]["fields"]["com_nom"],$etablissement["records"][0]["fields"]["code_postal_uai"],$etablissement["records"][0]["fields"]["adresse_uai"],(isset($etablissement["records"][0]["fields"]["numero_telephone_uai"])? "<br/><b>Téléphone :</b> ".$etablissement["records"][0]["fields"]["numero_telephone_uai"]:""));
 
-                printf("
+                    printf("
                     links = document.getElementsByClassName('loc_%s');
                     for (let i = 0;i<links.length;i++){
                         links.item(i).addEventListener('click',event=>{
+                                console.log('Et clic alors');
                                 map.closePopup();
                                 map.setView([%f,%f],20);
                                 dict.get('%s').openPopup();
+                                var rq = new XMLHttpRequest();
+                                rq.open('GET',\"api.php?type=incrementVisit&school=%s\");
+                                rq.responseType = 'json';
+                                rq.send();
                             });
-                    }",$id,$lat,$long,$id);
+                    }",$id,$lat,$long,$id,$id);
+                }else{
+                    print ("console.log('Erreur pour l\'uai ".$id.", les données des principales formations est obsolète');\n");
+                    printf("links = document.getElementsByClassName('loc_%s');
+                    for (let i = 0;i<links.length;i++){
+                        links.item(i).classList.add('disabled');
+                    }",$id);
+                }
             }
 
 
         ?>
     }
 
-    bindLink(map,dict);
 
 
     map.setView([<?php printf("%f, %f",$lat,$long);?>],10)
 
     if(navigator.geolocation) {
-        console.log("Ok");
         navigator.geolocation.getCurrentPosition(position => {
             map.setView([position.coords.latitude,position.coords.longitude],10);
         });
@@ -208,10 +227,9 @@ $idEtablissements = array();
         }
     });
 
-
-
-
-
+    setTimeout(function(){
+            bindLink(map,dict);
+    },5000); //Doit attendre que les requêtes XHTMLRequest sont finies
 
 </script>
 </body>
