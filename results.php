@@ -15,7 +15,6 @@ $idEtablissements = array();
     <meta charset="UTF-8">
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="static/css/styles.css">
     <link rel="stylesheet" href="static/css/results.css">
     <link rel="stylesheet" href="static/css/leaflet.css">
@@ -34,7 +33,7 @@ $idEtablissements = array();
         <div class="results">
             <div class="table">
                 <div class="tbl-header">
-                    <table cellpadding="0" cellspacing="0" border="0">
+                    <table style="padding: 0;border-spacing : 0;border: none;">
                         <thead>
                         <tr>
                             <th>Ecole<img alt="Flèche de changement d'ordre" src="static/img/up-arrow.png" class="order" id="0"/></th>
@@ -49,14 +48,14 @@ $idEtablissements = array();
                     </table>
                 </div>
                 <div class="tbl-content">
-                    <table cellpadding="0" cellspacing="0" border="0">
+                    <table style="padding: 0;border-spacing : 0;border: none;">
                         <tbody id="body-table"> <!-- est rempli par du JavaScript et non par le PHP (Permet de faire des actions de tri sans avoir a raffraichir la page -->
 
 
                         </tbody>
                     </table>
                 </div>
-                <div class="searchBar"><input type="search" id="searchInput" placeholder="Rechercher ..."><img src="static/img/search.png" id="searchImage"></div>
+                <div class="searchBar"><input type="search" id="searchInput" placeholder="Rechercher ..."><img src="static/img/search.png" alt="loupe" id="searchImage"></div>
 
             </div>
             <div id="map">
@@ -75,7 +74,7 @@ $idEtablissements = array();
     ?>
 </div>
 <script src="static/js/leaflet.js"></script>
-<script type="text/javascript">
+<script>
 
     function printResults(array){
         document.getElementById("body-table").innerHTML = "";
