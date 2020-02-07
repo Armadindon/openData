@@ -73,22 +73,28 @@ $idEtablissements = array();
     }
     ?>
 </div>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <script src="static/js/leaflet.js"></script>
 <script>
+    
+    function updateNbVisits(visitsBySchool) {
+        for(let school in visitsBySchool.keys()){
+            $.ajax({
+                url : "api.php",
+                type : "GET",
+                data: "type=nbVisits&school="+school,
+                dataType: "json"
+            }).done(function (msg) {
+                visitsBySchool.set(school,msg["results"][0]);
+            })
+        }
+    }
 
-    function printResults(array){
-        document.getElementById("body-table").innerHTML = "";
-        array.forEach(etab =>{
-            var rq = new XMLHttpRequest();
-            rq.open('GET',"api.php?type=nbVisits&school="+etab[5]);
-            rq.responseType = 'json';
-            rq.send();
-            rq.onload = function() {
-                let response = rq.response;
-                document.getElementById("body-table").innerHTML += "" +
-                    "<tr> <td>"+etab[0]+"</td> <td>"+etab[1]+"</td> <td>"+etab[2]+"</td> <td>"+etab[3]+"</td> <td>"+etab[4]+"</td> <td>"+response["results"][0]+"</td> <td><a class='loc_"+etab[5]+"'>Lien</a></td> </tr>"
-                }
-            });
+    function printResults(array,visitsBySchool){
+        for(let i =0;i<array.length;i++){
+            let etab = array[i];
+            document.getElementById("body-table").innerHTML += "<tr> <td>"+etab[0]+"</td> <td>"+etab[1]+"</td> <td>"+etab[2]+"</td> <td>"+etab[3]+"</td> <td>"+etab[4]+"</td> <td>"+visitsBySchool.get(etab[5])+"</td> <td><a class='loc_"+etab[5]+"'>Lien</a></td> </tr>"
+        }
     }
 
     function searchKeyWord(list,keyWord) {
@@ -106,26 +112,50 @@ $idEtablissements = array();
 
 
 
-    var dataResults = [];
-
     <?php
-            //on transmet les données au javascript comme ca le Javascript pourra faire ses actions sans a voir a raffraichir la page
-    foreach ($infos["records"] as $record) {
-        if (!in_array($record["fields"]["etablissement"], $idEtablissements)) {
-            array_push($idEtablissements, $record["fields"]["etablissement"]);
-        }
-        printf("dataResults.push([\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"]);\n",
-            $record["fields"]["etablissement_lib"],
-            $record["fields"]["com_ins_lib"],
-            $record["fields"]["sect_disciplinaire_lib"],
-            $record["fields"]["diplome_lib"],
-            $record["fields"]["libelle_intitule_1"],
-            $record["fields"]["etablissement"]
-        );
-    }
+            printf("var dep = '%s';
+                           var typeF = '%s';
+                           var year = '%s';"
+            ,$_POST["dep"],$_POST["type"],$_POST["year"]);
     ?>
 
-    printResults(dataResults);
+    var dataResults = [];
+    var infoSchools = new Map();
+    var visitsBySchools = new Map();
+
+
+    $.ajax({
+        url : "api.php",
+        type : "GET",
+        data: "type=getInfo&typeF="+typeF+"&dep="+dep+"&year="+year,
+        dataType: "json",
+    }).done(function (msg) {
+        for (let i =0;i<msg["records"].length;i++){
+            let fields = msg["records"][i]["fields"];
+            dataResults.push([fields["etablissement_lib"],fields["com_ins_lib"],fields["sect_disciplinaire_lib"],fields["diplome_lib"],fields["libelle_intitule_1"],fields["etablissement"]]);
+            if(!visitsBySchools.has(fields["etablissement"])){
+                $.ajax({
+                    url : "api.php",
+                    type : "GET",
+                    data: "type=getInfo&typeF="+typeF+"&dep="+dep+"&year="+year,
+                    dataType: "json",}).done(
+                        function (msg) {
+                            if(msg["nhits"]!==0){
+                                //un seul résultat
+                                //lattitude et longitude, nom, site, ville, code posta, adresse, et éventuellement numéro de téléphone
+                                infoSchools.set(fields["etablissement"],[[]]);
+                            }else{
+                                infoSchools.set(fields["etablissement"],null);
+                                console.log("Il y a une erreur avec l'uai "+fields["etablissement"]+" car l'opendata n'a aps été mise a jour");
+                            }
+                });
+            }
+            visitsBySchools.set(fields["etablissement"],0);
+        }
+        updateNbVisits(visitsBySchools);
+        printResults(dataResults,visitsBySchools);
+    });
+
 
 
     var map = L.map("map",{});
@@ -217,12 +247,12 @@ $idEtablissements = array();
 
     //pour la barre de recherche
     document.getElementById("searchImage").addEventListener("click",event=>{
-        printResults(searchKeyWord(dataResults,document.getElementById("searchInput").value));
+        printResults(searchKeyWord(dataResults,document.getElementById("searchInput").value),visitsBySchools);
     });
 
     document.getElementById("searchInput").addEventListener("keyup",event=>{
         if(event.key === "Enter"){
-            printResults(searchKeyWord(dataResults,document.getElementById("searchInput").value));
+            printResults(searchKeyWord(dataResults,document.getElementById("searchInput").value),visitsBySchools);
         }
     });
 
