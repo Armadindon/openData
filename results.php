@@ -24,7 +24,9 @@ $idEtablissements = array();
 </head>
 <body>
 
-
+<div id="loader">
+    <div class="loader"></div>
+</div>
 <div class="container">
     <?php
     if (count($infos["records"])>0) {
@@ -78,7 +80,7 @@ $idEtablissements = array();
 <script>
     
     function updateNbVisits(visitsBySchool) {
-        for(let school in visitsBySchool.keys()){
+        for(let school of visitsBySchool.keys()){
             $.ajax({
                 url : "api.php",
                 type : "GET",
@@ -89,11 +91,26 @@ $idEtablissements = array();
             })
         }
     }
+    
+    function generatePopups(map,dict,infosSchools) {
+        for(let school of infosSchools.keys()){
+            if(infosSchools.get(school) == null){
+                dict.set(school,null);
+            }else{
+                let infos = infosSchools.get(school);
+                let html = "<b>"+infos[1]+"</b><br/><a href='"+infos[2]+"'>Site web</a><br/><b>Adresse :</b> "+infos[3]+" ("+infos[4]+") - "+infos[5];
+                if(infos[6] !== undefined) html+= "<br/><b>Numéro de téléphone : <b/>"+infos[6];
+                dict.set(school,L.marker(infos[0]).addTo(map).bindPopup(html));
+                map.setView(infos[0],10);
+            }
+        }
+    }
 
     function printResults(array,visitsBySchool){
+        $(".tbl-content>table>tbody").empty();
         for(let i =0;i<array.length;i++){
             let etab = array[i];
-            document.getElementById("body-table").innerHTML += "<tr> <td>"+etab[0]+"</td> <td>"+etab[1]+"</td> <td>"+etab[2]+"</td> <td>"+etab[3]+"</td> <td>"+etab[4]+"</td> <td>"+visitsBySchool.get(etab[5])+"</td> <td><a class='loc_"+etab[5]+"'>Lien</a></td> </tr>"
+            document.getElementById("body-table").innerHTML += "<tr> <td>"+etab[0]+"</td> <td>"+etab[1]+"</td> <td>"+etab[2]+"</td> <td>"+etab[3]+"</td> <td>"+etab[4]+"</td> <td class='visits_"+etab[5]+"'>"+visitsBySchool.get(etab[5])+"</td> <td><a class='loc_"+etab[5]+"'>Lien</a></td> </tr>"
         }
     }
 
@@ -110,6 +127,54 @@ $idEtablissements = array();
         return results;
     }
 
+    function bindLink(map,dict,lstSchools) {
+        for (let school of lstSchools) {
+
+            let links = document.getElementsByClassName("loc_" + school);
+            let popup = dict.get(school);
+            if (popup !== null) {
+                for (let items of links) {
+                    items.addEventListener('click', event => {
+                        map.closePopup();
+                        map.setView(popup.getLatLng(), 20);
+                        popup.openPopup();
+                        $.get("api.php?type=incrementVisit&school="+school);
+                        $(".visits_"+school).each(function (index) {
+                            let nb = parseInt($(this).html());
+                            nb+=1;
+                            $(this).html(""+nb);
+                        });
+                    });
+                }
+            } else {
+                for (let items of links) {
+                    items.classList.add('disabled');
+                }
+            }
+        }
+    }
+
+    //lattitude et longitude, nom, site, ville, code posta, adresse, et éventuellement numéro de téléphone
+    //Renvoie une map avec tous les infos sur toutes les écoles
+    function getInfosOnSchools(lstSchools){
+        let infos = new Map();
+        for(let school of lstSchools){
+            $.ajax({
+                url : "api.php",
+                type : "GET",
+                data: "type=getInfoSchool&school="+school,
+                dataType: "json",
+            }).done(function (msg) {
+                if(msg["nhits"] === 0){
+                    infos.set(school,null);
+                }else{
+                    let result = msg["records"][0]["fields"];
+                    infos.set(school,[result["coordonnees"],result["uo_lib"],result["url"],result["com_nom"],result["code_postal_uai"],result["adresse_uai"],result["numero_telephone_uai"]]);
+                }
+            });
+        }
+        return infos;
+    }
 
 
     <?php
@@ -119,9 +184,12 @@ $idEtablissements = array();
             ,$_POST["dep"],$_POST["type"],$_POST["year"]);
     ?>
 
+    var lstSchools = new Set();
     var dataResults = [];
     var infoSchools = new Map();
     var visitsBySchools = new Map();
+    var map = L.map("map",{});
+    var popups = new Map();
 
 
     $.ajax({
@@ -132,34 +200,14 @@ $idEtablissements = array();
     }).done(function (msg) {
         for (let i =0;i<msg["records"].length;i++){
             let fields = msg["records"][i]["fields"];
+            lstSchools.add(fields["etablissement"]);
             dataResults.push([fields["etablissement_lib"],fields["com_ins_lib"],fields["sect_disciplinaire_lib"],fields["diplome_lib"],fields["libelle_intitule_1"],fields["etablissement"]]);
-            if(!visitsBySchools.has(fields["etablissement"])){
-                $.ajax({
-                    url : "api.php",
-                    type : "GET",
-                    data: "type=getInfo&typeF="+typeF+"&dep="+dep+"&year="+year,
-                    dataType: "json",}).done(
-                        function (msg) {
-                            if(msg["nhits"]!==0){
-                                //un seul résultat
-                                //lattitude et longitude, nom, site, ville, code posta, adresse, et éventuellement numéro de téléphone
-                                infoSchools.set(fields["etablissement"],[[]]);
-                            }else{
-                                infoSchools.set(fields["etablissement"],null);
-                                console.log("Il y a une erreur avec l'uai "+fields["etablissement"]+" car l'opendata n'a aps été mise a jour");
-                            }
-                });
-            }
             visitsBySchools.set(fields["etablissement"],0);
         }
         updateNbVisits(visitsBySchools);
-        printResults(dataResults,visitsBySchools);
+        infoSchools = getInfosOnSchools(Array.from(lstSchools));
     });
 
-
-
-    var map = L.map("map",{});
-    var dict = new Map();
 
 
     L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
@@ -167,53 +215,6 @@ $idEtablissements = array();
     }).addTo(map);
 
 
-
-    function bindLink(map,dict){
-        <?php
-            echo ("let links;\n");
-            //on ajoute les marqueurs sur la carte
-            //On récupère les coordonées du dernier point placé pour le mettre au centre au cas ou si l'utilisateur ne souhaite pas donner sa géolocalisation
-            $lat = 0.0;
-            $long = 0.0;
-            foreach ($idEtablissements as $id){
-                $etablissement = json_decode(file_get_contents("https://data.enseignementsup-recherche.gouv.fr/api/records/1.0/search/?dataset=fr-esr-principaux-etablissements-enseignement-superieur&sort=uo_lib&facet=uai&refine.uai=".$id."&fields=coordonnees,uo_lib,url,adresse_uai,com_nom,code_postal_uai,numero_telephone_uai"),true);
-                if($etablissement["nhits"] != 0){
-                    $lat = $etablissement["records"][0]["fields"]["coordonnees"][0];
-                    $long = $etablissement["records"][0]["fields"]["coordonnees"][1];
-                    printf("
-                    dict.set('%s',L.marker([%f, %f]).addTo(map).bindPopup(\"<b>%s</b><br/><a href='%s'>Site web</a><br/><b>Adresse :</b> %s (%s) - %s%s\"));
-                    ",$id,$lat,$long,$etablissement["records"][0]["fields"]["uo_lib"],$etablissement["records"][0]["fields"]["url"],$etablissement["records"][0]["fields"]["com_nom"],$etablissement["records"][0]["fields"]["code_postal_uai"],$etablissement["records"][0]["fields"]["adresse_uai"],(isset($etablissement["records"][0]["fields"]["numero_telephone_uai"])? "<br/><b>Téléphone :</b> ".$etablissement["records"][0]["fields"]["numero_telephone_uai"]:""));
-
-                    printf("
-                    links = document.getElementsByClassName('loc_%s');
-                    for (let i = 0;i<links.length;i++){
-                        links.item(i).addEventListener('click',event=>{
-                                console.log('Et clic alors');
-                                map.closePopup();
-                                map.setView([%f,%f],20);
-                                dict.get('%s').openPopup();
-                                var rq = new XMLHttpRequest();
-                                rq.open('GET',\"api.php?type=incrementVisit&school=%s\");
-                                rq.responseType = 'json';
-                                rq.send();
-                            });
-                    }",$id,$lat,$long,$id,$id);
-                }else{
-                    print ("console.log('Erreur pour l\'uai ".$id.", les données des principales formations est obsolète');\n");
-                    printf("links = document.getElementsByClassName('loc_%s');
-                    for (let i = 0;i<links.length;i++){
-                        links.item(i).classList.add('disabled');
-                    }",$id);
-                }
-            }
-
-
-        ?>
-    }
-
-
-
-    map.setView([<?php printf("%f, %f",$lat,$long);?>],10)
 
     if(navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(position => {
@@ -237,9 +238,9 @@ $idEtablissements = array();
             //on met en place le sort
             dataResults.sort((a,b)=>a[event.target.id].localeCompare(b[event.target.id]));
             //on réaffiche la liste
-            printResults(dataResults);
+            printResults(dataResults,visitsBySchools);
             //on remet bien les marqueurs
-            bindLink(map,dict);
+            bindLink(map,popups,visitsBySchools.keys());
         });
     }
 
@@ -256,10 +257,14 @@ $idEtablissements = array();
         }
     });
 
-    setTimeout(function(){
-            bindLink(map,dict);
-    },5000); //Doit attendre que les requêtes XHTMLRequest sont finies
 
+    $(document).ajaxStop(function () {
+        printResults(dataResults,visitsBySchools);
+        generatePopups(map,popups,infoSchools);
+        bindLink(map,popups,visitsBySchools.keys());
+        $("#loader").remove();
+        $(this).unbind("ajaxStop");
+    });
 </script>
 </body>
 
