@@ -50,9 +50,11 @@ switch ($_GET["type"]){
     case "getInfo":
         $url = "https://data.enseignementsup-recherche.gouv.fr/api/records/1.0/search/?dataset=fr-esr-principaux-diplomes-et-formations-prepares-etablissements-publics&rows=10000&sort=-rentree_lib&refine.rentree_lib=2017-18";
 
-        if(isset($_GET["typeF"])) $url .= "&refine.sect_disciplinaire_lib=".$_GET["typeF"];
-        if(isset($_GET["dep"])) $url .= "&refine.dep_ins_lib=".$_GET["dep"];
-        if(isset($_GET["year"])) $url .= "&refine.niveau=".$_GET["year"];
+        if(isset($_GET["diplome_rgp"])) $url .= "&refine.diplome_rgp=".$_GET["diplome_rgp"];
+        if(isset($_GET["sect_disciplinaire_lib"])) $url .= "&refine.sect_disciplinaire_lib=".$_GET["sect_disciplinaire_lib"];
+        if(isset($_GET["reg_ins_lib"])) $url .= "&refine.reg_ins_lib=".$_GET["reg_ins_lib"];
+        if(isset($_GET["dep_etab_lib"])) $url .= "&refine.dep_etab_lib=".$_GET["dep_etab_lib"];
+        if(isset($_GET["etablissement_lib"])) $url .= "&refine.etablissement_lib=".$_GET["etablissement_lib"];
         $url .= "&fields=etablissement,etablissement_lib,com_ins_lib,sect_disciplinaire_lib,diplome_lib,libelle_intitule_1";
         echo file_get_contents($url);
         break;

@@ -7,8 +7,8 @@ body{
 
 .buttons{
     margin: 0 auto;
-    padding: 2em;
-    display: inline-block;
+    padding: 20px 2em;
+    display: flex;
     width: 61em;
 }
 /* Reset Select */
@@ -36,10 +36,12 @@ select::-ms-expand {
 }
 /* Custom Select */
 .select {
+    align-self: center;
     position: relative;
     display: inline-flex;
     width: 20em;
     height: 3em;
+    margin: 0.5em auto;
     line-height: 3;
     background: #2c3e50;
     overflow: hidden;
