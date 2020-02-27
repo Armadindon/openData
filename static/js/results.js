@@ -79,12 +79,17 @@ function bindLink(map,dict,lstSchools) {
 function getInfosOnSchools(lstSchools){
     let infos = new Map();
     for(let school of lstSchools){
-        $.ajax({
+        let req = $.ajax({
             url : "api.php",
             type : "GET",
             data: "type=getInfoSchool&school="+school,
             dataType: "json",
-        }).done(function (msg) {
+        });
+        req.fail(function () {
+            error =true;
+        });
+
+        req.done(function (msg) {
             if(msg["nhits"] === 0){
                 infos.set(school,null);
             }else{
@@ -96,6 +101,7 @@ function getInfosOnSchools(lstSchools){
     return infos;
 }
 
+var error = false;
 var lstSchools = new Set();
 var dataResults = [];
 var infoSchools = new Map();
@@ -112,12 +118,16 @@ map.setView([48.856614,2.3522219],5); //au cas ou aucune formation n'a de coordo
 
 console.log(urlInitialQuery);
 
-$.ajax({
-    url : "api.php",
-    type : "GET",
-    data: urlInitialQuery,
-    dataType: "json",
-}).done(function (msg) {
+    let req = $.ajax({
+        url : "api.php",
+        type : "GET",
+        data: urlInitialQuery,
+        dataType: "json",
+    });
+    req.fail(function () {
+        error = true;
+    });
+    req.done(function (msg) {
     for (let i =0;i<msg["records"].length;i++){
         let fields = msg["records"][i]["fields"];
         lstSchools.add(fields["etablissement"]);
@@ -136,11 +146,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
 
 
 
-if(navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(position => {
-        map.setView([position.coords.latitude,position.coords.longitude],10);
-    });
-}
 
 var cursors = document.getElementsByClassName("order");
 
@@ -179,9 +184,21 @@ document.getElementById("searchInput").addEventListener("keyup",event=>{
 
 
 $(document).ajaxStop(function () {
-    printResults(dataResults,visitsBySchools);
-    generatePopups(map,popups,infoSchools);
-    bindLink(map,popups,visitsBySchools.keys());
-    $("#loader").remove();
-    $(this).unbind("ajaxStop");
+    if(navigator.geolocation) {//Ne marche pas sur liflux
+        navigator.geolocation.getCurrentPosition(function (position) {
+            console.log(position);
+            map.setView([position.coords.latitude,position.coords.longitude],10);
+        });
+    }
+    if (error){
+        alert("Il y a eu une erreur ! Merci de raffraîchir la Page");
+        $(".loader").remove();
+        $("#loader").append("<h1 style='color: #D81B60;'>Une erreur est survenue ! Merci de raffraîchir la page !</h1>")
+    } else{
+        printResults(dataResults,visitsBySchools);
+        generatePopups(map,popups,infoSchools);
+        bindLink(map,popups,visitsBySchools.keys());
+        $("#loader").remove();
+        $(this).unbind("ajaxStop");
+    }
 });

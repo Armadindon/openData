@@ -36,6 +36,10 @@ function updateSelects(parameters) {
 
 var requestParamaters = {};
 
+$("select").each(function (index) {
+    $(this).val("");
+});
+
 $("#required>div>select, #optional>div>select").change(function () {
     if($(this).prop('disabled')){
         delete requestParamaters[$(this).attr('name')];
