@@ -6,12 +6,26 @@ if (!(isset($_POST["diplome_rgp"]) && isset($_POST["sect_disciplinaire_lib"]) &&
 
 $json = file_get_contents("https://data.enseignementsup-recherche.gouv.fr/api/records/1.0/search/?dataset=fr-esr-principaux-diplomes-et-formations-prepares-etablissements-publics&rows=10000&sort=-rentree_lib&refine.rentree_lib=2017-18&refine.diplome_rgp=".$_POST["diplome_rgp"]."&refine.sect_disciplinaire_lib=".$_POST["sect_disciplinaire_lib"]."&refine.reg_ins_lib=".$_POST["reg_ins_lib"]."&fields=etablissement,etablissement_lib,com_ins_lib,sect_disciplinaire_lib,diplome_lib,libelle_intitule_1");
 $infos = json_decode($json,true);
+
+
+
 $idEtablissements = array();
 ?>
 
 <!doctype html>
 <html lang="fr">
 <head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <!-- Permet de Track cette page sur Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-159294982-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-159294982-1');
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
@@ -28,10 +42,8 @@ $idEtablissements = array();
     <div class="loader"></div>
 </div>
 <div class="container">
-    <?php
-    if (count($infos["records"])>0) {
-        ?>
-        <h1>Voici les résultats !</h1>
+    <div id="normal" style="display: none;"><h1>Voici les résultats !</h1>
+        <h2>On a trouvé un total de <?php echo count($infos["records"]); ?> résultats !</h2>
         <div class="results">
             <div class="table">
                 <div class="tbl-header">
@@ -43,7 +55,7 @@ $idEtablissements = array();
                             <th>Specialite<img alt="Flèche de changement d'ordre" src="static/img/up-arrow.png" class="order" id="2"/></th>
                             <th>Type de Diplôme<img alt="Flèche de changement d'ordre" src="static/img/up-arrow.png" class="order" id="3"/></th>
                             <th>Intitulé de la Formation <img alt="Flèche de changement d'ordre" src="static/img/up-arrow.png" class="order" id="4"/></th>
-                            <th>Nombre de visites </th>
+                            <th>Nombre d'apparitions</th>
                             <th>Plus D'Informations</th>
                         </tr>
                         </thead>
@@ -66,14 +78,13 @@ $idEtablissements = array();
 
         <h2>Une autre formation ?</h2>
         <h2><a href="index.php">Retourner a l'acceuil</a></h2>
-        <?php
-    }else{
-        ?>
+    </div>
+    <div id="noResults" style="display: none;">
         <h1> Aucun Résultat trouvé !</h1>
         <h2><a href="index.php">Retourner a l'acceuil</a></h2>
-    <?php
-    }
-    ?>
+    </div>
+
+
 </div>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <script src="static/js/leaflet.js"></script>

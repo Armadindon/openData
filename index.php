@@ -1,5 +1,5 @@
 <?php
-
+include "paramWebsite.info.php";
 $json = file_get_contents("https://data.enseignementsup-recherche.gouv.fr/api/records/1.0/search/?dataset=fr-esr-principaux-diplomes-et-formations-prepares-etablissements-publics&sort=-rentree_lib&facet=diplome_rgp&facet=sect_disciplinaire_lib&facet=reg_ins_lib&refine.rentree_lib=2017-18");
 $infos = json_decode($json,true);
 
@@ -9,6 +9,16 @@ $infos = json_decode($json,true);
 <!doctype html>
 <html lang="fr">
 <head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <!-- Permet de Track cette page sur Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-159294982-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-159294982-1');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
@@ -20,6 +30,9 @@ $infos = json_decode($json,true);
     <title>Trouve ma Formation</title>
 </head>
 <body>
+
+<!-- TOUT LES SELECT SONT TRIES EN AFFICHANT CEUX QUI ONT LE PLUS DE RESULTATS EN PREMIER -->
+
 <div class="container">
     <div id="alerts">
         <h1>Une erreur a été detectée !</h1>

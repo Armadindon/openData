@@ -12,7 +12,22 @@ function updateNbVisits(visitsBySchool) {
     }
 }
 
-function generatePopups(map,dict,infosSchools) {
+function updateNbSearch(nbSearched) {
+    for(let formation of nbSearched.keys()){
+        console.log(formation);
+        $.ajax({
+            url : "api.php",
+            type : "GET",
+            data: "type=nbSearch&searched="+formation,
+            dataType: "json"
+        }).done(function (msg) {
+            nbSearched.set(formation,msg["results"][0]);
+        })
+    }
+}
+
+
+function generatePopups(map,dict,infosSchools,visitsBySchool,customIcon) {
     for(let school of infosSchools.keys()){
         if(infosSchools.get(school) == null){
             dict.set(school,null);
@@ -20,17 +35,18 @@ function generatePopups(map,dict,infosSchools) {
             let infos = infosSchools.get(school);
             let html = "<b>"+infos[1]+"</b><br/><a href='"+infos[2]+"'>Site web</a><br/><b>Adresse :</b> "+infos[3]+" ("+infos[4]+") - "+infos[5];
             if(infos[6] !== undefined) html+= "<br/><b>Numéro de téléphone : <b/>"+infos[6];
-            dict.set(school,L.marker(infos[0]).addTo(map).bindPopup(html));
+            html+= "<br/><b>Nombre de clics sur la fiche : </b>"+visitsBySchool.get(school);
+            dict.set(school,L.marker(infos[0],{icon: customIcon}).addTo(map).bindPopup(html));
             map.setView(infos[0],10);
         }
     }
 }
 
-function printResults(array,visitsBySchool){
+function printResults(array,searchedTime){
     $(".tbl-content>table>tbody").empty();
     for(let i =0;i<array.length;i++){
         let etab = array[i];
-        document.getElementById("body-table").innerHTML += "<tr> <td>"+etab[0]+"</td> <td>"+etab[1]+"</td> <td>"+etab[2]+"</td> <td>"+etab[3]+"</td> <td>"+etab[4]+"</td> <td class='visits_"+etab[5]+"'>"+visitsBySchool.get(etab[5])+"</td> <td><a class='loc_"+etab[5]+"'>Lien</a></td> </tr>"
+        document.getElementById("body-table").innerHTML += "<tr> <td>"+etab[0]+"</td> <td>"+etab[1]+"</td> <td>"+etab[2]+"</td> <td>"+etab[3]+"</td> <td>"+etab[4]+"</td> <td>"+searchedTime.get(etab[6])+"</td> <td><a class='loc_"+etab[5]+"'>Lien</a></td> </tr>"
     }
 }
 
@@ -74,6 +90,15 @@ function bindLink(map,dict,lstSchools) {
     }
 }
 
+function initalPrint(dataResults) {
+    if (dataResults.length !== 0 ){
+        $("#normal").css("display","block");
+        map.invalidateSize(); //règle un problème d'affichage causé par le "display : none;"
+    }else{
+        $("#noResults").css("display","block");
+    }
+}
+
 //lattitude et longitude, nom, site, ville, code posta, adresse, et éventuellement numéro de téléphone
 //Renvoie une map avec tous les infos sur toutes les écoles
 function getInfosOnSchools(lstSchools){
@@ -101,6 +126,19 @@ function getInfosOnSchools(lstSchools){
     return infos;
 }
 
+var customIcon = L.icon({
+    iconUrl:'static/img/education-512.png',
+    shadowUrl:'static/img/marker-shadow.png',
+    iconSize:     [50, 60],
+    shadowSize:   [35, 40],
+    iconAnchor:   [25, 95],
+    shadowAnchor: [4, 80],
+    popupAnchor:  [0, -85]
+    }
+
+);
+
+var searchedTime = new Map();
 var error = false;
 var lstSchools = new Set();
 var dataResults = [];
@@ -113,8 +151,6 @@ let urlInitialQuery = "type=getInfo";
 for(let key of Object.keys(paramQuerry)){
     urlInitialQuery += "&"+key+"="+paramQuerry[key];
 }
-
-map.setView([48.856614,2.3522219],5); //au cas ou aucune formation n'a de coordonnées
 
 console.log(urlInitialQuery);
 
@@ -129,16 +165,24 @@ console.log(urlInitialQuery);
     });
     req.done(function (msg) {
     for (let i =0;i<msg["records"].length;i++){
+        console.log(msg["records"][i]["recordid"]);
+        $.ajax({
+            url:"api.php?type=incrementSearch&searched="+msg["records"][i]["recordid"],
+            type:"GET",
+            global: false
+        });//Il est apparu dans une recherche
+        searchedTime.set(msg["records"][i]["recordid"],0);
         let fields = msg["records"][i]["fields"];
         lstSchools.add(fields["etablissement"]);
-        dataResults.push([fields["etablissement_lib"],fields["com_ins_lib"],fields["sect_disciplinaire_lib"],fields["diplome_lib"],fields["libelle_intitule_1"],fields["etablissement"]]);
+        dataResults.push([fields["etablissement_lib"],fields["com_ins_lib"],fields["sect_disciplinaire_lib"],fields["diplome_lib"],fields["libelle_intitule_1"],fields["etablissement"],msg["records"][i]["recordid"]]);
         visitsBySchools.set(fields["etablissement"],0);
     }
+        updateNbSearch(searchedTime);
     updateNbVisits(visitsBySchools);
     infoSchools = getInfosOnSchools(Array.from(lstSchools));
 });
 
-
+map.setView([48.856614,2.3522219],5); //au cas ou aucune formation n'a de coordonnées
 
 L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
     maxZoom: 18
@@ -163,7 +207,7 @@ for (let i = 0;i<cursors.length;i++){
         //on met en place le sort
         dataResults.sort((a,b)=>a[event.target.id].localeCompare(b[event.target.id]));
         //on réaffiche la liste
-        printResults(dataResults,visitsBySchools);
+        printResults(dataResults,searchedTime);
         //on remet bien les marqueurs
         bindLink(map,popups,visitsBySchools.keys());
     });
@@ -173,17 +217,20 @@ for (let i = 0;i<cursors.length;i++){
 
 //pour la barre de recherche
 document.getElementById("searchImage").addEventListener("click",event=>{
-    printResults(searchKeyWord(dataResults,document.getElementById("searchInput").value),visitsBySchools);
+    printResults(searchKeyWord(dataResults,document.getElementById("searchInput").value),searchedTime);
+    bindLink(map,popups,visitsBySchools.keys());
 });
 
 document.getElementById("searchInput").addEventListener("keyup",event=>{
     if(event.key === "Enter"){
-        printResults(searchKeyWord(dataResults,document.getElementById("searchInput").value),visitsBySchools);
+        printResults(searchKeyWord(dataResults,document.getElementById("searchInput").value),searchedTime);
+        bindLink(map,popups,visitsBySchools.keys());
     }
 });
 
 
 $(document).ajaxStop(function () {
+    initalPrint(dataResults);
     if(navigator.geolocation) {//Ne marche pas sur liflux
         navigator.geolocation.getCurrentPosition(function (position) {
             console.log(position);
@@ -195,8 +242,8 @@ $(document).ajaxStop(function () {
         $(".loader").remove();
         $("#loader").append("<h1 style='color: #D81B60;'>Une erreur est survenue ! Merci de raffraîchir la page !</h1>")
     } else{
-        printResults(dataResults,visitsBySchools);
-        generatePopups(map,popups,infoSchools);
+        printResults(dataResults,searchedTime);
+        generatePopups(map,popups,infoSchools,visitsBySchools,customIcon);
         bindLink(map,popups,visitsBySchools.keys());
         $("#loader").remove();
         $(this).unbind("ajaxStop");
