@@ -1,8 +1,12 @@
 <?php
 include "paramWebsite.info.php";
+
+function compareFacet($x,$y){
+    return strcmp($x["name"],$y["name"]);
+}
+
 $json = file_get_contents("https://data.enseignementsup-recherche.gouv.fr/api/records/1.0/search/?dataset=fr-esr-principaux-diplomes-et-formations-prepares-etablissements-publics&sort=-rentree_lib&facet=diplome_rgp&facet=sect_disciplinaire_lib&facet=reg_ins_lib&refine.rentree_lib=2017-18");
 $infos = json_decode($json,true);
-
 
 ?>
 
@@ -47,6 +51,7 @@ $infos = json_decode($json,true);
                     <select name="diplome_rgp" required> <!-- src : https://codepen.io/raubaca/pen/VejpQP -->
                         <option value="" selected disabled>Type de Diplôme<span style="color: #920000 !important;">*</span></option>
                         <?php
+                        usort($infos["facet_groups"][2]["facets"],'compareFacet');
                         foreach ($infos["facet_groups"][2]["facets"] as $spec){
                             printf("<option value=\"%s\">%s</option>",$spec["name"],$spec["name"]);
                         }
@@ -57,6 +62,7 @@ $infos = json_decode($json,true);
                     <select name="sect_disciplinaire_lib" required> <!-- src : https://codepen.io/raubaca/pen/VejpQP -->
                         <option value="" selected disabled>Spécialité<span style="color: #920000 !important;">*</span></option>
                         <?php
+                        usort($infos["facet_groups"][1]["facets"],'compareFacet');
                         foreach ($infos["facet_groups"][1]["facets"] as $spec){
                             printf("<option value=\"%s\">%s</option>",$spec["name"],$spec["name"]);
                         }
@@ -67,6 +73,7 @@ $infos = json_decode($json,true);
                     <select name="reg_ins_lib" required> <!-- src : https://codepen.io/raubaca/pen/VejpQP -->
                         <option value="" selected disabled>Région<span style="color: #920000 !important;">*</span></option>
                         <?php
+                        usort($infos["facet_groups"][0]["facets"],'compareFacet');
                         foreach ($infos["facet_groups"][0]["facets"] as $reg){
                             printf("<option value=\"%s\">%s</option>",$reg["name"],$reg["name"]);
                         }
