@@ -4,12 +4,6 @@ if (!(isset($_POST["diplome_rgp"]) && isset($_POST["sect_disciplinaire_lib"]) &&
     header('Location: index.php'); // on redirect si les paramètres ne sont pas remplis
 }
 
-$json = file_get_contents("https://data.enseignementsup-recherche.gouv.fr/api/records/1.0/search/?dataset=fr-esr-principaux-diplomes-et-formations-prepares-etablissements-publics&rows=10000&sort=-rentree_lib&refine.rentree_lib=2017-18&refine.diplome_rgp=".$_POST["diplome_rgp"]."&refine.sect_disciplinaire_lib=".$_POST["sect_disciplinaire_lib"]."&refine.reg_ins_lib=".$_POST["reg_ins_lib"]."&fields=etablissement,etablissement_lib,com_ins_lib,sect_disciplinaire_lib,diplome_lib,libelle_intitule_1");
-$infos = json_decode($json,true);
-
-
-
-$idEtablissements = array();
 ?>
 
 <!doctype html>
@@ -43,7 +37,7 @@ $idEtablissements = array();
 </div>
 <div class="container">
     <div id="normal" style="display: none;"><h1>Voici les résultats !</h1>
-        <h2>On a trouvé un total de <?php echo count($infos["records"]); ?> résultats !</h2>
+        <h2>On a trouvé un total de <span id="nbRecords"></span>  résultats !</h2>
         <div class="results">
             <div class="table">
                 <div class="tbl-header">

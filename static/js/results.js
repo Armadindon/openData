@@ -177,7 +177,8 @@ console.log(urlInitialQuery);
         dataResults.push([fields["etablissement_lib"],fields["com_ins_lib"],fields["sect_disciplinaire_lib"],fields["diplome_lib"],fields["libelle_intitule_1"],fields["etablissement"],msg["records"][i]["recordid"]]);
         visitsBySchools.set(fields["etablissement"],0);
     }
-        updateNbSearch(searchedTime);
+    $("#nbRecords").append(dataResults.length);
+    updateNbSearch(searchedTime);
     updateNbVisits(visitsBySchools);
     infoSchools = getInfosOnSchools(Array.from(lstSchools));
 });
